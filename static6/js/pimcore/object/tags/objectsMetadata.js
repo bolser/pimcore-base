@@ -65,6 +65,9 @@ pimcore.object.tags.objectsMetadata = Class.create(pimcore.object.tags.objects, 
                     this.dataChanged = true;
                 }.bind(this),
                 update: function(store) {
+                    if(store.ignoreDataChanged) {
+                        return;
+                    }
                     this.dataChanged = true;
                 }.bind(this)
             },
@@ -72,7 +75,6 @@ pimcore.object.tags.objectsMetadata = Class.create(pimcore.object.tags.objects, 
         });
 
     },
-
 
     createLayout: function(readOnly) {
         var autoHeight = false;
@@ -304,18 +306,32 @@ pimcore.object.tags.objectsMetadata = Class.create(pimcore.object.tags.objects, 
                 items: columns
             },
             viewConfig: {
-                // reverted this, see https://github.com/pimcore/pimcore/issues/979
-                // probably a ExtJS 6.0 bug. dropdowns not working anymore if plugin is enabled
-                // TODO: investigate if there this is already fixed 6.2
-                // plugins: {
-                //     ptype: 'gridviewdragdrop',
-                //     dragroup: 'element'
-                // },
+                plugins: {
+                    ptype: 'gridviewdragdrop',
+                    draggroup: 'element'
+                },
                 markDirty: false,
                 listeners: {
                     refresh: function (gridview) {
                         this.requestNicePathData(this.store.data);
-                    }.bind(this)
+                    }.bind(this),
+                    drop: function () {
+                        // this is necessary to avoid endless recursion when long lists are sorted via d&d
+                        // TODO: investigate if there this is already fixed 6.2
+                        if(this.object.toolbar && this.object.toolbar.items && this.object.toolbar.items.items) {
+                            this.object.toolbar.items.items[0].focus();
+                        }
+                    }.bind(this),
+                    // see https://github.com/pimcore/pimcore/issues/979
+                    // probably a ExtJS 6.0 bug. withou this, dropdowns not working anymore if plugin is enabled
+                    // TODO: investigate if there this is already fixed 6.2
+                    cellmousedown: function( element , td , cellIndex , record , tr , rowIndex , e , eOpts ) {
+                        if(cellIndex > visibleFields.length) {
+                            return false;
+                        } else {
+                            return true;
+                        }
+                    }
                 }
             },
             componentCls: cls,

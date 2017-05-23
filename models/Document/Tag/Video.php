@@ -511,13 +511,13 @@ class Video extends Model\Document\Tag
         $additional_params="";
 
         $clipConfig = [];
-        if (is_array($options["config"]["clip"])) {
+        if (isset($options["config"]["clip"]) && is_array($options["config"]["clip"])) {
             $clipConfig = $options["config"]["clip"];
         }
 
         // this is to be backward compatible to <= v 1.4.7
         $configurations = $clipConfig;
-        if (is_array($options["youtube"])) {
+        if (array_key_exists("youtube", $options) && is_array($options["youtube"])) {
             $configurations = array_merge($clipConfig, $options["youtube"]);
         }
 
@@ -768,6 +768,11 @@ class Video extends Model\Document\Tag
                 foreach ($this->getOptions()["removeAttributes"] as $attribute) {
                     unset($attributes[$attribute]);
                 }
+            }
+
+            // do not allow an empty controls tag
+            if (isset($attributes["controls"]) && !$attributes["controls"]) {
+                unset($attributes["controls"]);
             }
 
             foreach ($attributes as $key => $value) {
