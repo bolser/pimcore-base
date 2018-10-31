@@ -95,24 +95,26 @@ class Admin_ClassController extends \Pimcore\Controller\Action\Admin
         // build groups
         $groups = [];
         foreach ($classes as $class) {
-            if ($class->getGroup()) {
-                $type = "manual";
-                $groupName = $class->getGroup();
-            } else {
-                $type = "auto";
-                preg_match("@^([A-Za-z])([^A-Z]+)@", $class->getName(), $matches);
-                $groupName = $matches[0];
-            }
+            if (null !== $class) {
+                if ($class->getGroup()) {
+                    $type = "manual";
+                    $groupName = $class->getGroup();
+                } else {
+                    $type = "auto";
+                    preg_match("@^([A-Za-z])([^A-Z]+)@", $class->getName(), $matches);
+                    $groupName = $matches[0];
+                }
 
-            $groupName = \Pimcore\Model\Translation\Admin::getByKeyLocalized($groupName, true, true);
+                $groupName = \Pimcore\Model\Translation\Admin::getByKeyLocalized($groupName, true, true);
 
-            if (!isset($groups[$groupName])) {
-                $groups[$groupName] = [
-                    "classes" => [],
-                    "type" => $type
-                ];
+                if (!isset($groups[$groupName])) {
+                    $groups[$groupName] = [
+                        "classes" => [],
+                        "type"    => $type
+                    ];
+                }
+                $groups[$groupName]["classes"][] = $class;
             }
-            $groups[$groupName]["classes"][] = $class;
         }
 
         $treeNodes = [];
